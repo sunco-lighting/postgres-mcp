@@ -57,6 +57,7 @@ class AccessMode(str, Enum):
 db_connection = DbConnPool()
 current_access_mode = AccessMode.UNRESTRICTED
 shutdown_in_progress = False
+restricted_query_timeout = 30
 
 
 async def get_sql_driver() -> Union[SqlDriver, SafeSqlDriver]:
@@ -65,7 +66,7 @@ async def get_sql_driver() -> Union[SqlDriver, SafeSqlDriver]:
 
     if current_access_mode == AccessMode.RESTRICTED:
         logger.debug("Using SafeSqlDriver with restrictions (RESTRICTED mode)")
-        return SafeSqlDriver(sql_driver=base_driver, timeout=30)  # 30 second timeout
+        return SafeSqlDriver(sql_driver=base_driver, timeout=restricted_query_timeout)  # second timeout
     else:
         logger.debug("Using unrestricted SqlDriver (UNRESTRICTED mode)")
         return base_driver
@@ -566,6 +567,12 @@ async def main():
         help="Set SQL access mode: unrestricted (unrestricted) or restricted (read-only with protections)",
     )
     parser.add_argument(
+        "--query-timeout",
+        type=int,
+        default=30,
+        help="Set query timeout in seconds for restricted mode",
+    )
+    parser.add_argument(
         "--transport",
         type=str,
         choices=["stdio", "sse", "streamable-http"],
@@ -602,6 +609,10 @@ async def main():
     # Store the access mode in the global variable
     global current_access_mode
     current_access_mode = AccessMode(args.access_mode)
+
+    # Store the query timeout in the global variable
+    global restricted_query_timeout
+    restricted_query_timeout = args.query_timeout
 
     # Add the query tool with a description and annotations appropriate to the access mode
     if current_access_mode == AccessMode.UNRESTRICTED:
