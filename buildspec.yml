@@ -36,6 +36,7 @@ phases:
   build:
     on-failure: ABORT
     commands:
+      - uv run pytest
       - rm -rf dist
       - uv build --sdist --no-sources
       - ls -lh dist/*.tar.gz
