@@ -6,8 +6,6 @@ env:
     CODEARTIFACT_REPOSITORY: "sunco-packages"
     CODEARTIFACT_REGION: "us-west-2"
     PACKAGE_NAME: "postgres-mcp"
-  secrets-manager:
-    DOCKER_ACCESS: docker-public-image-access
 phases:
   install:
     runtime-versions:
@@ -17,11 +15,7 @@ phases:
   pre_build:
     on-failure: ABORT
     commands:
-      - docker -v
       - aws --version
-      - echo $DOCKER_ACCESS | docker login --username starcmdsunco --password-stdin
-      - DOCKER_REGISTRY=$DOMAIN_OWNER.dkr.ecr.us-west-1.amazonaws.com
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
       - |
           set -euo pipefail
           NEXT_VERSION=$(uv version --short)
