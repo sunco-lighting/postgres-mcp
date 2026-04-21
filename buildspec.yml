@@ -16,23 +16,23 @@ phases:
     on-failure: ABORT
     commands:
       - aws --version
-      # - |
-      #     set -euo pipefail
-      #     NEXT_VERSION=$(uv version --short)
-      #     echo "Preparing ${PACKAGE_NAME} ${NEXT_VERSION}"
-      #     EXISTING_COUNT=$(aws codeartifact list-package-versions \
-      #       --domain "$CODEARTIFACT_DOMAIN" \
-      #       --domain-owner "$DOMAIN_OWNER" \
-      #       --repository "$CODEARTIFACT_REPOSITORY" \
-      #       --package "$PACKAGE_NAME" \
-      #       --format pypi \
-      #       --region "$CODEARTIFACT_REGION" \
-      #       --query "length(versions[?version=='${NEXT_VERSION}'])" \
-      #       --output text)
-      #     if [ "$EXISTING_COUNT" != "0" ]; then
-      #       echo "Version ${NEXT_VERSION} already exists in CodeArtifact"
-      #       exit 1
-      #     fi
+      - |
+          set -euo pipefail
+          NEXT_VERSION=$(uv version --short)
+          echo "Preparing ${PACKAGE_NAME} ${NEXT_VERSION}"
+          EXISTING_COUNT=$(aws codeartifact list-package-versions \
+            --domain "$CODEARTIFACT_DOMAIN" \
+            --domain-owner "$DOMAIN_OWNER" \
+            --repository "$CODEARTIFACT_REPOSITORY" \
+            --package "$PACKAGE_NAME" \
+            --format pypi \
+            --region "$CODEARTIFACT_REGION" \
+            --query "length(versions[?version=='${NEXT_VERSION}'])" \
+            --output text)
+          if [ "$EXISTING_COUNT" != "0" ]; then
+            echo "Version ${NEXT_VERSION} already exists in CodeArtifact"
+            exit 1
+          fi
   build:
     on-failure: ABORT
     commands:
