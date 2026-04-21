@@ -1,0 +1,68 @@
+version: 0.2
+env:
+  variables:
+    DOMAIN_OWNER: "817377232869"
+    CODEARTIFACT_DOMAIN: "sunco"
+    CODEARTIFACT_REPOSITORY: "sunco-packages"
+    CODEARTIFACT_REGION: "us-west-2"
+    PACKAGE_NAME: "postgres-mcp"
+  secrets-manager:
+    DOCKER_ACCESS: docker-public-image-access
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - python -m pip install --upgrade pip uv
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - docker -v
+      - aws --version
+      - echo $DOCKER_ACCESS | docker login --username starcmdsunco --password-stdin
+      - DOCKER_REGISTRY=$DOMAIN_OWNER.dkr.ecr.us-west-1.amazonaws.com
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+      - |
+          set -euo pipefail
+          NEXT_VERSION=$(uv version --short)
+          echo "Preparing ${PACKAGE_NAME} ${NEXT_VERSION}"
+          EXISTING_COUNT=$(aws codeartifact list-package-versions \
+            --domain "$CODEARTIFACT_DOMAIN" \
+            --domain-owner "$DOMAIN_OWNER" \
+            --repository "$CODEARTIFACT_REPOSITORY" \
+            --package "$PACKAGE_NAME" \
+            --format pypi \
+            --region "$CODEARTIFACT_REGION" \
+            --query "length(versions[?version=='${NEXT_VERSION}'])" \
+            --output text)
+          if [ "$EXISTING_COUNT" != "0" ]; then
+            echo "Version ${NEXT_VERSION} already exists in CodeArtifact"
+            exit 1
+          fi
+  build:
+    on-failure: ABORT
+    commands:
+      - rm -rf dist
+      - uv build --sdist --no-sources
+      - ls -lh dist/*.tar.gz
+  post_build:
+    on-failure: ABORT
+    commands:
+      - |
+          set -euo pipefail
+          export UV_PUBLISH_URL=$(aws codeartifact get-repository-endpoint \
+            --domain "$CODEARTIFACT_DOMAIN" \
+            --domain-owner "$DOMAIN_OWNER" \
+            --repository "$CODEARTIFACT_REPOSITORY" \
+            --region "$CODEARTIFACT_REGION" \
+            --format pypi \
+            --query repositoryEndpoint \
+            --output text)
+          export UV_PUBLISH_USERNAME=aws
+          export UV_PUBLISH_PASSWORD=$(aws codeartifact get-authorization-token \
+            --domain "$CODEARTIFACT_DOMAIN" \
+            --domain-owner "$DOMAIN_OWNER" \
+            --region "$CODEARTIFACT_REGION" \
+            --query authorizationToken \
+            --output text)
+          uv publish --no-attestations dist/*.tar.gz
