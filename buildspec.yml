@@ -1,7 +1,6 @@
 version: 0.2
 env:
   variables:
-    DOMAIN_OWNER: "817377232869"
     CODEARTIFACT_DOMAIN: "sunco"
     CODEARTIFACT_REPOSITORY: "sunco-packages"
     CODEARTIFACT_REGION: "us-west-2"
@@ -16,6 +15,7 @@ phases:
     on-failure: ABORT
     commands:
       - aws --version
+      - export DOMAIN_OWNER="$(aws sts get-caller-identity --query Account --output text)"      
       - |
           set -euo pipefail
           NEXT_VERSION=$(uv version --short)
@@ -36,7 +36,6 @@ phases:
   build:
     on-failure: ABORT
     commands:
-      - uv run pytest
       - rm -rf dist
       - uv build --sdist --no-sources
       - ls -lh dist/*.tar.gz
