@@ -10,6 +10,7 @@ from .extension_utils import get_postgres_version
 from .extension_utils import reset_postgres_version_cache
 from .index import IndexDefinition
 from .safe_sql import SafeSqlDriver
+from .dangerous_sql import DangerousSqlDriver
 from .sql_driver import DbConnPool
 from .sql_driver import SqlDriver
 from .sql_driver import obfuscate_password
@@ -19,6 +20,7 @@ __all__ = [
     "DbConnPool",
     "IndexDefinition",
     "SafeSqlDriver",
+    "DangerousSqlDriver",
     "SqlBindParams",
     "SqlDriver",
     "TableAliasVisitor",
