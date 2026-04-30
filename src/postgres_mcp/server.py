@@ -29,6 +29,7 @@ from .index.llm_opt import LLMOptimizerTool
 from .index.presentation import TextPresentation
 from .sql import DbConnPool
 from .sql import SafeSqlDriver
+from .sql import DangerousSqlDriver
 from .sql import SqlDriver
 from .sql import check_hypopg_installation_status
 from .sql import obfuscate_password
@@ -66,10 +67,10 @@ async def get_sql_driver() -> Union[SqlDriver, SafeSqlDriver]:
 
     if current_access_mode == AccessMode.RESTRICTED:
         logger.debug("Using SafeSqlDriver with restrictions (RESTRICTED mode)")
-        return SafeSqlDriver(sql_driver=base_driver, timeout=restricted_query_timeout)  # second timeout
+        return SafeSqlDriver(sql_driver=base_driver, timeout=restricted_query_timeout)
     else:
         logger.debug("Using unrestricted SqlDriver (UNRESTRICTED mode)")
-        return base_driver
+        return DangerousSqlDriver(sql_driver=base_driver, timeout=restricted_query_timeout)
 
 
 def format_text_response(text: Any) -> ResponseType:
