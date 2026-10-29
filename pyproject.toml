@@ -3,12 +3,12 @@ name = "postgres-mcp"
 version = "0.3.4"
 description = "PostgreSQL Tuning and Analysis Tool"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<4.0"
 dependencies = [
     "mcp[cli]>=1.25.0,<2.0",
     "psycopg[binary]>=3.3.2",
     "humanize>=4.15.0",
-    "pglast==7.11",
+    "pglast>=7.11,<8.0",
     "attrs>=25.4.0",
     "psycopg-pool>=3.3.0",
     "instructor>=1.14.4",
